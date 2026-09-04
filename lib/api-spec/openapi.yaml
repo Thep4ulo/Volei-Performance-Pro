@@ -10,6 +10,18 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summaries and activity
+  - name: athletes
+    description: Athlete management
+  - name: matches
+    description: Match management and statistics
+  - name: training
+    description: Training load management
+  - name: analysis
+    description: Performance analysis
+  - name: reports
+    description: Performance reports
 paths:
   /healthz:
     get:
@@ -24,7 +36,291 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+  /athletes:
+    get:
+      operationId: getAthletes
+      tags: [athletes]
+      summary: List athletes
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: position
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Athletes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Athlete"
+    post:
+      operationId: createAthlete
+      tags: [athletes]
+      summary: Create athlete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AthleteInput"
+      responses:
+        "201":
+          description: Created athlete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Athlete"
+  /athletes/{id}:
+    get:
+      operationId: getAthlete
+      tags: [athletes]
+      summary: Get athlete
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Athlete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Athlete"
+        "404":
+          description: Athlete not found
+    patch:
+      operationId: updateAthlete
+      tags: [athletes]
+      summary: Update athlete
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AthleteUpdate"
+      responses:
+        "200":
+          description: Updated athlete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Athlete"
+    delete:
+      operationId: deleteAthlete
+      tags: [athletes]
+      summary: Delete athlete
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Athlete deleted
+  /matches:
+    get:
+      operationId: getMatches
+      tags: [matches]
+      summary: List matches
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, season]
+      responses:
+        "200":
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+    post:
+      operationId: createMatch
+      tags: [matches]
+      summary: Create match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchInput"
+      responses:
+        "201":
+          description: Created match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /matches/{id}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      summary: Get match
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+    patch:
+      operationId: updateMatch
+      tags: [matches]
+      summary: Update match
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchUpdate"
+      responses:
+        "200":
+          description: Updated match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /training-sessions:
+    get:
+      operationId: getTrainingSessions
+      tags: [training]
+      summary: List training sessions
+      responses:
+        "200":
+          description: Training sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrainingSession"
+    post:
+      operationId: createTrainingSession
+      tags: [training]
+      summary: Create training session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrainingSessionInput"
+      responses:
+        "201":
+          description: Created training session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingSession"
+  /analysis/tactical-summary:
+    get:
+      operationId: getTacticalSummary
+      tags: [analysis]
+      summary: Get tactical zone summary
+      responses:
+        "200":
+          description: Tactical summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TacticalSummary"
+  /analysis/comparison:
+    get:
+      operationId: getAthleteComparison
+      tags: [analysis]
+      summary: Compare two athletes
+      parameters:
+        - name: firstAthleteId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: secondAthleteId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Athlete comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AthleteComparison"
+  /reports:
+    get:
+      operationId: getReports
+      tags: [reports]
+      summary: List reports
+      responses:
+        "200":
+          description: Reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Create report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +329,309 @@ components:
           type: string
       required:
         - status
+    MetricPoint:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+      required: [label, value]
+    DashboardSummary:
+      type: object
+      properties:
+        totalAthletes:
+          type: number
+        averagePerformance:
+          type: number
+        attackEfficiency:
+          type: number
+        receptionEfficiency:
+          type: number
+        sideOut:
+          type: number
+        weeklyLoad:
+          type: number
+        fatigueIndex:
+          type: number
+        performanceTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricPoint"
+        positionDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricPoint"
+      required:
+        - totalAthletes
+        - averagePerformance
+        - attackEfficiency
+        - receptionEfficiency
+        - sideOut
+        - weeklyLoad
+        - fatigueIndex
+        - performanceTrend
+        - positionDistribution
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [match, training, report, athlete]
+        title:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+        accent:
+          type: string
+      required: [id, type, title, description, timestamp, accent]
+    AthleteMetrics:
+      type: object
+      properties:
+        attack:
+          type: number
+        serve:
+          type: number
+        block:
+          type: number
+        reception:
+          type: number
+        defense:
+          type: number
+        setting:
+          type: number
+      required: [attack, serve, block, reception, defense, setting]
+    Athlete:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        initials:
+          type: string
+        photoUrl:
+          type: ["string", "null"]
+        birthDate:
+          type: string
+        height:
+          type: number
+        weight:
+          type: number
+        position:
+          type: string
+          enum: [Levantador, Ponteiro, Oposto, Central, Líbero]
+        dominantHand:
+          type: string
+          enum: [Direita, Esquerda]
+        jerseyNumber:
+          type: number
+        team:
+          type: string
+        status:
+          type: string
+          enum: [Ativo, Em recuperação, Inativo]
+        performance:
+          type: number
+        trend:
+          type: number
+        metrics:
+          $ref: "#/components/schemas/AthleteMetrics"
+        lastUpdated:
+          type: string
+      required:
+        - id
+        - name
+        - initials
+        - photoUrl
+        - birthDate
+        - height
+        - weight
+        - position
+        - dominantHand
+        - jerseyNumber
+        - team
+        - status
+        - performance
+        - trend
+        - metrics
+        - lastUpdated
+    AthleteInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+        birthDate:
+          type: string
+        height:
+          type: number
+        weight:
+          type: number
+        position:
+          type: string
+          enum: [Levantador, Ponteiro, Oposto, Central, Líbero]
+        dominantHand:
+          type: string
+          enum: [Direita, Esquerda]
+        jerseyNumber:
+          type: number
+        team:
+          type: string
+      required: [name, birthDate, height, weight, position, dominantHand, jerseyNumber, team]
+    AthleteUpdate:
+      allOf:
+        - $ref: "#/components/schemas/AthleteInput"
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+        opponent:
+          type: string
+        date:
+          type: string
+        championship:
+          type: string
+        location:
+          type: string
+        result:
+          type: string
+          enum: [Vitória, Derrota]
+        setsWon:
+          type: number
+        setsLost:
+          type: number
+        attackEfficiency:
+          type: number
+        sideOut:
+          type: number
+        breakPoint:
+          type: number
+        serveEfficiency:
+          type: number
+        status:
+          type: string
+          enum: [Concluída, Agendada]
+      required: [id, opponent, date, championship, location, result, setsWon, setsLost, attackEfficiency, sideOut, breakPoint, serveEfficiency, status]
+    MatchInput:
+      type: object
+      properties:
+        opponent:
+          type: string
+        date:
+          type: string
+        championship:
+          type: string
+        location:
+          type: string
+        result:
+          type: string
+          enum: [Vitória, Derrota]
+        setsWon:
+          type: number
+        setsLost:
+          type: number
+      required: [opponent, date, championship, location, result, setsWon, setsLost]
+    MatchUpdate:
+      allOf:
+        - $ref: "#/components/schemas/MatchInput"
+    TrainingSession:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+        duration:
+          type: number
+        perceivedIntensity:
+          type: number
+        trainingType:
+          type: string
+        load:
+          type: number
+        fatigueRisk:
+          type: string
+          enum: [Baixo, Moderado, Alto]
+      required: [id, date, duration, perceivedIntensity, trainingType, load, fatigueRisk]
+    TrainingSessionInput:
+      type: object
+      properties:
+        date:
+          type: string
+        duration:
+          type: number
+        perceivedIntensity:
+          type: number
+        trainingType:
+          type: string
+      required: [date, duration, perceivedIntensity, trainingType]
+    ZoneMetric:
+      type: object
+      properties:
+        zone:
+          type: string
+        points:
+          type: number
+        errors:
+          type: number
+        efficiency:
+          type: number
+      required: [zone, points, errors, efficiency]
+    TacticalSummary:
+      type: object
+      properties:
+        attackZones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneMetric"
+        serveZones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneMetric"
+        insight:
+          type: string
+      required: [attackZones, serveZones, insight]
+    AthleteComparison:
+      type: object
+      properties:
+        first:
+          $ref: "#/components/schemas/Athlete"
+        second:
+          $ref: "#/components/schemas/Athlete"
+      required: [first, second]
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: [Individual, Equipe]
+        subject:
+          type: string
+        createdAt:
+          type: string
+        status:
+          type: string
+          enum: [Pronto, Processando]
+      required: [id, title, type, subject, createdAt, status]
+    ReportInput:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [Individual, Equipe]
+        subject:
+          type: string
+      required: [title, type, subject]
 

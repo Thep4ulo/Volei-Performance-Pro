@@ -1,0 +1,1 @@
+- [Orval e Zod](orval-zod-compatibility.md) — contratos integer geram zod.int() incompatível com o Zod 3 instalado; alinhar versões antes de usar.

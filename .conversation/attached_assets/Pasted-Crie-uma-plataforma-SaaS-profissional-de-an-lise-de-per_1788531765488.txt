@@ -1,0 +1,425 @@
+Crie uma plataforma SaaS profissional de análise de performance esportiva para voleibol chamada "Vôlei Performance Pro".
+
+O objetivo é construir um sistema utilizado por clubes, treinadores, analistas de desempenho e atletas para monitoramento técnico, físico e tático.
+
+Não crie apenas um dashboard visual. Construa uma aplicação completa com arquitetura preparada para produção.
+
+STACK:
+
+- React + TypeScript
+
+- Tailwind CSS
+
+- Componentes modernos e responsivos
+
+- Supabase como backend
+
+- PostgreSQL para banco de dados
+
+- Autenticação com níveis de acesso
+
+- Storage para fotos e arquivos
+
+- Gráficos interativos
+
+IDENTIDADE VISUAL:
+
+Criar uma interface premium semelhante a softwares profissionais de análise esportiva.
+
+Características:
+
+- Tema escuro moderno
+
+- Design minimalista
+
+- Cards com métricas
+
+- Gráficos profissionais
+
+- Navegação lateral
+
+- Layout responsivo para desktop, tablet e mobile
+
+PERFIS DE USUÁRIO:
+
+Administrador:
+
+- Gerenciar clubes
+
+- Gerenciar usuários
+
+- Configurações do sistema
+
+Treinador:
+
+- Criar equipes
+
+- Cadastrar atletas
+
+- Registrar treinos
+
+- Registrar partidas
+
+- Analisar desempenho
+
+Analista:
+
+- Inserir estatísticas
+
+- Criar relatórios
+
+- Analisar dados técnicos
+
+Atleta:
+
+- Visualizar seus próprios dados
+
+- Acompanhar evolução
+
+MÓDULOS:
+
+1. DASHBOARD PRINCIPAL
+
+Criar uma tela inicial com:
+
+Cards:
+
+- Total de atletas
+
+- Performance média da equipe
+
+- Eficiência de ataque
+
+- Eficiência de recepção
+
+- Side-out
+
+- Carga semanal de treino
+
+- Índice de fadiga
+
+Gráficos:
+
+- Evolução de performance por período
+
+- Comparação entre atletas
+
+- Distribuição de posições
+
+- Tendência de desempenho
+
+2. GESTÃO DE ATLETAS
+
+Criar CRUD completo:
+
+Campos:
+
+- Nome
+
+- Foto
+
+- Data nascimento
+
+- Altura
+
+- Peso
+
+- Posição
+
+- Mão dominante
+
+- Número da camisa
+
+- Equipe
+
+Posições:
+
+- Levantador
+
+- Ponteiro
+
+- Oposto
+
+- Central
+
+- Líbero
+
+Criar página individual do atleta:
+
+Mostrar:
+
+Perfil:
+
+- Dados físicos
+
+- Histórico
+
+Performance técnica:
+
+- Ataque
+
+- Saque
+
+- Bloqueio
+
+- Recepção
+
+- Defesa
+
+- Levantamento
+
+Criar gráfico de evolução individual.
+
+3. ESTATÍSTICAS DE JOGO
+
+Criar módulo de partidas.
+
+Cadastro:
+
+- Adversário
+
+- Data
+
+- Campeonato
+
+- Local
+
+- Resultado
+
+- Sets vencidos
+
+- Sets perdidos
+
+Durante a partida registrar:
+
+ATAQUE:
+
+- Tentativas
+
+- Pontos
+
+- Erros
+
+- Bloqueios sofridos
+
+- Eficiência
+
+SAQUE:
+
+- Aces
+
+- Erros
+
+- Saques positivos
+
+RECEPÇÃO:
+
+- Recepção perfeita
+
+- Recepção positiva
+
+- Erros
+
+BLOQUEIO:
+
+- Bloqueios vencedores
+
+- Toques no bloqueio
+
+DEFESA:
+
+- Defesas realizadas
+
+- Erros
+
+Calcular automaticamente:
+
+- Eficiência de ataque
+
+- Side-out
+
+- Break point
+
+- Eficiência de saque
+
+- Eficiência defensiva
+
+4. ANÁLISE TÁTICA
+
+Criar mapa de quadra de voleibol.
+
+Permitir registrar:
+
+- Zona de ataque
+
+- Zona de saque
+
+- Erros
+
+- Pontos
+
+Criar:
+
+- Heatmap de ataque
+
+- Heatmap de saque
+
+- Análise das zonas mais eficientes
+
+5. PREPARAÇÃO FÍSICA
+
+Criar módulo de carga.
+
+Registrar:
+
+Treino:
+
+- Data
+
+- Duração
+
+- Intensidade percebida
+
+- Tipo de treino
+
+Calcular:
+
+Carga = duração x intensidade
+
+Mostrar:
+
+- Carga semanal
+
+- Carga mensal
+
+- Risco de fadiga
+
+- Histórico
+
+6. COMPARAÇÃO DE ATLETAS
+
+Criar ferramenta para comparar jogadores.
+
+Exibir:
+
+Radar comparativo:
+
+- Ataque
+
+- Saque
+
+- Bloqueio
+
+- Recepção
+
+- Defesa
+
+Permitir selecionar dois atletas.
+
+7. RELATÓRIOS
+
+Criar geração de relatórios:
+
+Relatório individual:
+
+- Perfil
+
+- Evolução
+
+- Estatísticas
+
+- Pontos fortes
+
+- Pontos de melhoria
+
+Relatório da equipe:
+
+- Média geral
+
+- Evolução
+
+- Tendências
+
+8. BANCO DE DADOS
+
+Criar tabelas:
+
+users
+
+profiles
+
+clubs
+
+teams
+
+athletes
+
+matches
+
+performance_records
+
+training_sessions
+
+reports
+
+Criar relacionamentos:
+
+Clubes possuem equipes.
+
+Equipes possuem atletas.
+
+Partidas possuem estatísticas.
+
+Atletas possuem histórico de performance.
+
+9. SEGURANÇA
+
+Implementar:
+
+- Login
+
+- Recuperação de senha
+
+- Controle por perfil
+
+- Proteção de rotas
+
+- Row Level Security no Supabase
+
+10. EXPERIÊNCIA DO USUÁRIO
+
+Adicionar:
+
+- Loading states
+
+- Empty states
+
+- Mensagens de erro
+
+- Validação de formulários
+
+- Busca de atletas
+
+- Filtros por período
+
+- Exportação de dados
+
+REQUISITOS IMPORTANTES:
+
+A aplicação deve parecer um produto comercial pronto para vender para clubes de voleibol.
+
+Priorize:
+
+- Código organizado
+
+- Componentização
+
+- Escalabilidade
+
+- Performance
+
+- UX profissional
+
+- Banco estruturado
+
+Não entregue uma landing page. Entregue uma plataforma funcional de gestão e análise esportiva.

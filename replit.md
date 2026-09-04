@@ -1,6 +1,6 @@
-# [Project name]
+# Vôlei Performance Pro
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Plataforma SaaS para clubes de voleibol acompanharem performance técnica, carga física e análise tática em um único workspace.
 
 ## Run & Operate
 
@@ -22,23 +22,29 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/volei-performance-pro/src/App.tsx` — shell, rotas e telas do produto.
+- `artifacts/volei-performance-pro/src/index.css` — tokens visuais e componentes utilitários.
+- `artifacts/api-server/src/routes/volei.ts` — rotas e dados iniciais da plataforma.
+- `lib/api-spec/openapi.yaml` — contrato único da API.
+- `lib/db/src/schema/volei.ts` — tabelas PostgreSQL do domínio.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- O primeiro recorte usa o PostgreSQL gerenciado do workspace, com seed idempotente para o ambiente de demonstração.
+- A API mantém o prefixo `/api`; o frontend usa os hooks gerados a partir do OpenAPI.
+- O frontend foi estruturado para permitir conexão posterior a um provedor de autenticação sem trocar o modelo de papéis exibido em Configurações.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Dashboard com métricas e atividade recente, CRUD de atletas, perfis individuais, cadastro de partidas, sessões de treino com carga/fadiga, análise tática por zonas, comparação de atletas, relatórios e configurações de clube/equipe/acesso.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+O produto deve manter comunicação e interface em português, com aparência premium e foco em decisão esportiva.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+Após alterar o contrato OpenAPI, rode o codegen antes de usar novos hooks ou schemas.
 
 ## Pointers
 
