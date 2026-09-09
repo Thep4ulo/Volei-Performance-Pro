@@ -1,0 +1,189 @@
+Agora que a primeira versão do Vôlei Performance Pro está funcionando, vamos iniciar a fase de transformação em um produto SaaS profissional.
+
+Não recrie o projeto. Evolua a arquitetura existente.
+
+FASE 1 — AUDITORIA E PREPARAÇÃO
+
+Antes de alterar código:
+- analise a arquitetura atual
+- analise o banco PostgreSQL existente
+- identifique dados mockados
+- identifique pontos sem persistência real
+- verifique segurança das rotas
+- verifique estrutura da API
+
+Gere um resumo técnico antes de implementar.
+
+---
+
+FASE 2 — PRODUÇÃO COM DADOS REAIS
+
+Substitua dados demonstrativos por dados persistidos no PostgreSQL.
+
+Criar ou ajustar as tabelas:
+
+clubs
+- id
+- nome
+- logo
+- plano
+
+teams
+- id
+- club_id
+- nome
+- categoria
+- temporada
+
+users
+- id
+- nome
+- email
+- role
+
+roles:
+- ADMIN
+- COACH
+- ANALYST
+- ATHLETE
+
+athletes
+- id
+- team_id
+- nome
+- foto
+- posição
+- altura
+- peso
+- nascimento
+- mão dominante
+
+matches
+- id
+- team_id
+- adversário
+- data
+- competição
+- resultado
+
+performance_records
+- athlete_id
+- match_id
+- ataque
+- saque
+- bloqueio
+- recepção
+- defesa
+
+training_sessions
+- athlete_id
+- duração
+- intensidade
+- carga
+
+---
+
+FASE 3 — AUTENTICAÇÃO
+
+Implementar autenticação real.
+
+Adicionar:
+
+- login
+- logout
+- recuperação de senha
+- proteção de páginas
+- controle de acesso por perfil
+
+Cada usuário deve enxergar apenas os dados permitidos pelo seu clube.
+
+---
+
+FASE 4 — MOTOR DE PERFORMANCE
+
+Criar cálculos automáticos:
+
+Eficiência de ataque:
+
+(pontos de ataque - erros) / tentativas
+
+Side-out:
+
+pontos ganhos na recepção / recepções
+
+Eficiência de saque:
+
+aces - erros de saque
+
+Carga de treino:
+
+duração x percepção de esforço
+
+Criar funções reutilizáveis para esses cálculos.
+
+---
+
+FASE 5 — MÓDULO SCOUT DE PARTIDAS
+
+Transformar Partidas em um sistema profissional de scout.
+
+Criar registro de eventos:
+
+Atleta:
+Fundamento:
+Zona da quadra:
+Resultado:
+
+Fundamentos:
+
+- ataque
+- saque
+- recepção
+- bloqueio
+- defesa
+- levantamento
+
+Resultados:
+
+- ponto
+- erro
+- bloqueio adversário
+- defesa positiva
+
+Cada evento deve alimentar automaticamente as métricas.
+
+---
+
+FASE 6 — DASHBOARD INTELIGENTE
+
+Adicionar:
+
+- ranking de atletas
+- evolução individual
+- alertas de queda de performance
+- comparação entre atletas
+- tendências da equipe
+
+Exemplo:
+
+"Atleta X apresentou queda de 12% no ataque nos últimos 5 jogos."
+
+---
+
+FASE 7 — STORAGE
+
+Adicionar armazenamento real:
+
+- fotos de atletas
+- logos de equipes
+- relatórios
+
+---
+
+IMPORTANTE:
+
+Manter o design atual.
+Não remover funcionalidades existentes.
+Priorizar código limpo, escalável e pronto para produção.
+
+Antes de cada grande alteração, explique o plano e depois implemente.

@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
+import { z } from "zod/v4";
 import { db } from "@workspace/db";
 import {
   athletesTable,
@@ -7,6 +8,7 @@ import {
   matchesTable,
   performanceRecordsTable,
   reportsTable,
+  scoutEventsTable,
   teamsTable,
   trainingSessionsTable,
 } from "@workspace/db";
@@ -40,6 +42,8 @@ import {
   UpdateMatchParams,
   UpdateMatchResponse,
 } from "@workspace/api-zod";
+import { requireRole } from "../middlewares/auth";
+import { attackEfficiency, metricFromEvents, SCOUT_RESULTS, SCOUT_SKILLS, serveEfficiency, sideOut } from "../lib/performance";
 
 const router: IRouter = Router();
 let seedPromise: Promise<string> | undefined;
@@ -53,14 +57,18 @@ const initialsFor = (name: string) =>
     .join("")
     .toUpperCase();
 
-const athleteMetrics = (athleteId: string) => ({
-  attack: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 91 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 86 : 79,
-  serve: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 84 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 88 : 76,
-  block: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 72 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 80 : 89,
-  reception: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 87 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 92 : 81,
-  defense: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 85 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 89 : 78,
-  setting: athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1001" ? 94 : athleteId === "3a2f4e1f-3e7e-4d1c-8f88-5e8f8d6b1002" ? 76 : 74,
-});
+const emptyMetrics = { attack: 0, serve: 0, block: 0, reception: 0, defense: 0, setting: 0 };
+
+async function resolveTeamId(req: Request) {
+  return req.userContext?.teamId ?? ensureSeeded();
+}
+
+async function metricsForAthlete(athleteId: string) {
+  const events = await db.select({ skill: scoutEventsTable.skill, result: scoutEventsTable.result })
+    .from(scoutEventsTable)
+    .where(eq(scoutEventsTable.athleteId, athleteId));
+  return events.length ? metricFromEvents(events) : emptyMetrics;
+}
 
 async function ensureSeeded(): Promise<string> {
   if (seedPromise) return seedPromise;
@@ -161,6 +169,13 @@ async function ensureSeeded(): Promise<string> {
       },
     ]);
 
+    await db.insert(scoutEventsTable).values([
+      { athleteId: athleteSeed[0][0], matchId: (await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.teamId, teamId), eq(matchesTable.opponent, "Praia Clube"))).limit(1))[0].id, skill: "ataque", zone: "Zona 3", result: "ponto" },
+      { athleteId: athleteSeed[0][0], matchId: (await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.teamId, teamId), eq(matchesTable.opponent, "Praia Clube"))).limit(1))[0].id, skill: "ataque", zone: "Zona 3", result: "erro" },
+      { athleteId: athleteSeed[1][0], matchId: (await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.teamId, teamId), eq(matchesTable.opponent, "Praia Clube"))).limit(1))[0].id, skill: "recepção", zone: "Zona 5", result: "defesa positiva" },
+      { athleteId: athleteSeed[1][0], matchId: (await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.teamId, teamId), eq(matchesTable.opponent, "Praia Clube"))).limit(1))[0].id, skill: "saque", zone: "Zona 1", result: "ponto" },
+    ]);
+
     const sessions = [
       ["2026-09-03", 110, 7, "Técnico + tático"],
       ["2026-09-02", 90, 6, "Força"],
@@ -191,7 +206,8 @@ async function ensureSeeded(): Promise<string> {
   return seedPromise;
 }
 
-function mapAthlete(row: typeof athletesTable.$inferSelect) {
+async function mapAthlete(row: typeof athletesTable.$inferSelect) {
+  const metrics = await metricsForAthlete(row.id);
   return {
     id: row.id,
     name: row.name,
@@ -207,13 +223,13 @@ function mapAthlete(row: typeof athletesTable.$inferSelect) {
     status: row.status,
     performance: asNumber(row.performance),
     trend: asNumber(row.trend),
-    metrics: athleteMetrics(row.id),
+    metrics,
     lastUpdated: row.updatedAt.toISOString(),
   };
 }
 
-router.get("/dashboard/summary", async (_req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.get("/dashboard/summary", async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const [athletes, matches, sessions] = await Promise.all([
     db.select().from(athletesTable).where(eq(athletesTable.teamId, teamId)),
     db.select().from(matchesTable).where(eq(matchesTable.teamId, teamId)).orderBy(desc(matchesTable.date)),
@@ -247,8 +263,8 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
   res.json(GetDashboardSummaryResponse.parse(summary));
 });
 
-router.get("/dashboard/activity", async (_req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.get("/dashboard/activity", async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const [match, session, report] = await Promise.all([
     db.select().from(matchesTable).where(eq(matchesTable.teamId, teamId)).orderBy(desc(matchesTable.createdAt)).limit(1),
     db.select().from(trainingSessionsTable).where(eq(trainingSessionsTable.teamId, teamId)).orderBy(desc(trainingSessionsTable.date)).limit(1),
@@ -263,7 +279,7 @@ router.get("/dashboard/activity", async (_req, res): Promise<void> => {
 });
 
 router.get("/athletes", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+  const teamId = await resolveTeamId(req);
   const query = GetAthletesQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -273,11 +289,11 @@ router.get("/athletes", async (req, res): Promise<void> => {
   const filters = [eq(athletesTable.teamId, teamId)];
   if (position) filters.push(eq(athletesTable.position, position));
   const rows = await db.select().from(athletesTable).where(search ? and(...filters, or(ilike(athletesTable.name, `%${search}%`), ilike(athletesTable.position, `%${search}%`))) : and(...filters)).orderBy(asc(athletesTable.name));
-  res.json(GetAthletesResponse.parse(rows.map(mapAthlete)));
+  res.json(GetAthletesResponse.parse(await Promise.all(rows.map(mapAthlete))));
 });
 
-router.post("/athletes", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.post("/athletes", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const parsed = CreateAthleteBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -292,19 +308,19 @@ router.post("/athletes", async (req, res): Promise<void> => {
     performance: "0",
     trend: "0",
   }).returning();
-  res.status(201).json(CreateAthleteResponse.parse(mapAthlete(created)));
+  res.status(201).json(CreateAthleteResponse.parse(await mapAthlete(created)));
 });
 
 router.get("/athletes/:id", async (req, res): Promise<void> => {
-  const [athlete] = await db.select().from(athletesTable).where(eq(athletesTable.id, req.params.id));
+  const [athlete] = await db.select().from(athletesTable).where(and(eq(athletesTable.id, req.params.id), eq(athletesTable.teamId, await resolveTeamId(req))));
   if (!athlete) {
     res.status(404).json({ error: "Athlete not found" });
     return;
   }
-  res.json(GetAthleteResponse.parse(mapAthlete(athlete)));
+  res.json(GetAthleteResponse.parse(await mapAthlete(athlete)));
 });
 
-router.patch("/athletes/:id", async (req, res): Promise<void> => {
+router.patch("/athletes/:id", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
   const params = UpdateAthleteParams.safeParse(req.params);
   const parsed = UpdateAthleteBody.safeParse(req.body);
   if (!params.success || !parsed.success) {
@@ -317,21 +333,21 @@ router.patch("/athletes/:id", async (req, res): Promise<void> => {
     height: String(parsed.data.height),
     weight: String(parsed.data.weight),
     updatedAt: new Date(),
-  }).where(eq(athletesTable.id, params.data.id)).returning();
+  }).where(and(eq(athletesTable.id, params.data.id), eq(athletesTable.teamId, await resolveTeamId(req)))).returning();
   if (!updated) {
     res.status(404).json({ error: "Athlete not found" });
     return;
   }
-  res.json(UpdateAthleteResponse.parse(mapAthlete(updated)));
+  res.json(UpdateAthleteResponse.parse(await mapAthlete(updated)));
 });
 
-router.delete("/athletes/:id", async (req, res): Promise<void> => {
+router.delete("/athletes/:id", requireRole("ADMIN", "COACH"), async (req, res): Promise<void> => {
   const params = DeleteAthleteParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [deleted] = await db.delete(athletesTable).where(eq(athletesTable.id, params.data.id)).returning();
+  const [deleted] = await db.delete(athletesTable).where(and(eq(athletesTable.id, params.data.id), eq(athletesTable.teamId, await resolveTeamId(req)))).returning();
   if (!deleted) {
     res.status(404).json({ error: "Athlete not found" });
     return;
@@ -340,7 +356,7 @@ router.delete("/athletes/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/matches", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+  const teamId = await resolveTeamId(req);
   const query = GetMatchesQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -356,8 +372,8 @@ router.get("/matches", async (req, res): Promise<void> => {
   }))));
 });
 
-router.post("/matches", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.post("/matches", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const parsed = CreateMatchBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -381,7 +397,7 @@ router.post("/matches", async (req, res): Promise<void> => {
 });
 
 router.get("/matches/:id", async (req, res): Promise<void> => {
-  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, req.params.id));
+  const [match] = await db.select().from(matchesTable).where(and(eq(matchesTable.id, req.params.id), eq(matchesTable.teamId, await resolveTeamId(req))));
   if (!match) {
     res.status(404).json({ error: "Match not found" });
     return;
@@ -389,14 +405,76 @@ router.get("/matches/:id", async (req, res): Promise<void> => {
   res.json(GetMatchResponse.parse({ ...match, attackEfficiency: asNumber(match.attackEfficiency), sideOut: asNumber(match.sideOut), breakPoint: asNumber(match.breakPoint), serveEfficiency: asNumber(match.serveEfficiency) }));
 });
 
-router.patch("/matches/:id", async (req, res): Promise<void> => {
+const scoutEventBody = z.object({
+  athleteId: z.string().uuid(),
+  skill: z.enum(SCOUT_SKILLS),
+  zone: z.string().min(1).max(40),
+  result: z.enum(SCOUT_RESULTS),
+});
+
+async function recalculateMatch(matchId: string) {
+  const events = await db.select({ skill: scoutEventsTable.skill, result: scoutEventsTable.result })
+    .from(scoutEventsTable)
+    .where(eq(scoutEventsTable.matchId, matchId));
+  const attacks = events.filter((event) => event.skill === "ataque");
+  const serves = events.filter((event) => event.skill === "saque");
+  const receptions = events.filter((event) => event.skill === "recepção");
+  await db.update(matchesTable).set({
+    attackEfficiency: String(attackEfficiency(
+      attacks.filter((event) => event.result === "ponto").length,
+      attacks.filter((event) => event.result === "erro").length,
+      attacks.length,
+    )),
+    sideOut: String(sideOut(
+      receptions.filter((event) => event.result === "ponto" || event.result === "defesa positiva").length,
+      receptions.length,
+    )),
+    serveEfficiency: String(serveEfficiency(
+      serves.filter((event) => event.result === "ponto").length,
+      serves.filter((event) => event.result === "erro").length,
+    )),
+  }).where(eq(matchesTable.id, matchId));
+}
+
+router.get("/matches/:matchId/scout-events", async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
+  const matchId = Array.isArray(req.params.matchId) ? req.params.matchId[0] : req.params.matchId;
+  const [match] = await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.id, matchId), eq(matchesTable.teamId, teamId)));
+  if (!match) {
+    res.status(404).json({ error: "Match not found" });
+    return;
+  }
+  const events = await db.select().from(scoutEventsTable).where(eq(scoutEventsTable.matchId, match.id)).orderBy(desc(scoutEventsTable.createdAt));
+  res.json(events.map((event) => ({ ...event, createdAt: event.createdAt.toISOString() })));
+});
+
+router.post("/matches/:matchId/scout-events", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
+  const matchId = Array.isArray(req.params.matchId) ? req.params.matchId[0] : req.params.matchId;
+  const parsed = scoutEventBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [match] = await db.select({ id: matchesTable.id }).from(matchesTable).where(and(eq(matchesTable.id, matchId), eq(matchesTable.teamId, teamId)));
+  const [athlete] = await db.select({ id: athletesTable.id }).from(athletesTable).where(and(eq(athletesTable.id, parsed.data.athleteId), eq(athletesTable.teamId, teamId)));
+  if (!match || !athlete) {
+    res.status(404).json({ error: "Partida ou atleta não encontrado." });
+    return;
+  }
+  const [event] = await db.insert(scoutEventsTable).values({ ...parsed.data, matchId: match.id }).returning();
+  await recalculateMatch(match.id);
+  res.status(201).json({ ...event, createdAt: event.createdAt.toISOString() });
+});
+
+router.patch("/matches/:id", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
   const params = UpdateMatchParams.safeParse(req.params);
   const parsed = UpdateMatchBody.safeParse(req.body);
   if (!params.success || !parsed.success) {
     res.status(400).json({ error: !params.success ? params.error.message : !parsed.success ? parsed.error.message : "Invalid request" });
     return;
   }
-  const [updated] = await db.update(matchesTable).set(parsed.data).where(eq(matchesTable.id, params.data.id)).returning();
+  const [updated] = await db.update(matchesTable).set(parsed.data).where(and(eq(matchesTable.id, params.data.id), eq(matchesTable.teamId, await resolveTeamId(req)))).returning();
   if (!updated) {
     res.status(404).json({ error: "Match not found" });
     return;
@@ -404,14 +482,14 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   res.json(UpdateMatchResponse.parse({ ...updated, attackEfficiency: asNumber(updated.attackEfficiency), sideOut: asNumber(updated.sideOut), breakPoint: asNumber(updated.breakPoint), serveEfficiency: asNumber(updated.serveEfficiency) }));
 });
 
-router.get("/training-sessions", async (_req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.get("/training-sessions", async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const rows = await db.select().from(trainingSessionsTable).where(eq(trainingSessionsTable.teamId, teamId)).orderBy(desc(trainingSessionsTable.date));
   res.json(GetTrainingSessionsResponse.parse(rows.map((row) => ({ ...row, duration: row.duration, perceivedIntensity: asNumber(row.perceivedIntensity), load: asNumber(row.load) }))));
 });
 
-router.post("/training-sessions", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.post("/training-sessions", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const parsed = CreateTrainingSessionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -428,7 +506,8 @@ router.post("/training-sessions", async (req, res): Promise<void> => {
   res.status(201).json(CreateTrainingSessionResponse.parse({ ...created, perceivedIntensity: asNumber(created.perceivedIntensity), load: asNumber(created.load) }));
 });
 
-router.get("/analysis/tactical-summary", async (_req, res): Promise<void> => {
+router.get("/analysis/tactical-summary", async (req, res): Promise<void> => {
+  await resolveTeamId(req);
   const summary = {
     attackZones: [
       { zone: "Zona 4", points: 38, errors: 8, efficiency: 79 },
@@ -453,24 +532,24 @@ router.get("/analysis/comparison", async (req, res): Promise<void> => {
     return;
   }
   const [first, second] = await Promise.all([
-    db.select().from(athletesTable).where(eq(athletesTable.id, query.data.firstAthleteId)),
-    db.select().from(athletesTable).where(eq(athletesTable.id, query.data.secondAthleteId)),
+    db.select().from(athletesTable).where(and(eq(athletesTable.id, query.data.firstAthleteId), eq(athletesTable.teamId, await resolveTeamId(req)))),
+    db.select().from(athletesTable).where(and(eq(athletesTable.id, query.data.secondAthleteId), eq(athletesTable.teamId, await resolveTeamId(req)))),
   ]);
   if (!first[0] || !second[0]) {
     res.status(404).json({ error: "Athletes not found" });
     return;
   }
-  res.json(GetAthleteComparisonResponse.parse({ first: mapAthlete(first[0]), second: mapAthlete(second[0]) }));
+  res.json(GetAthleteComparisonResponse.parse({ first: await mapAthlete(first[0]), second: await mapAthlete(second[0]) }));
 });
 
-router.get("/reports", async (_req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.get("/reports", async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const rows = await db.select().from(reportsTable).where(eq(reportsTable.teamId, teamId)).orderBy(desc(reportsTable.createdAt));
   res.json(GetReportsResponse.parse(rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() }))));
 });
 
-router.post("/reports", async (req, res): Promise<void> => {
-  const teamId = await ensureSeeded();
+router.post("/reports", requireRole("ADMIN", "COACH", "ANALYST"), async (req, res): Promise<void> => {
+  const teamId = await resolveTeamId(req);
   const parsed = CreateReportBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

@@ -231,6 +231,67 @@ export interface AthleteComparison {
   second: Athlete;
 }
 
+export type ScoutEventSkill = typeof ScoutEventSkill[keyof typeof ScoutEventSkill];
+
+
+export const ScoutEventSkill = {
+  ataque: 'ataque',
+  saque: 'saque',
+  recepção: 'recepção',
+  bloqueio: 'bloqueio',
+  defesa: 'defesa',
+  levantamento: 'levantamento',
+} as const;
+
+export type ScoutEventResult = typeof ScoutEventResult[keyof typeof ScoutEventResult];
+
+
+export const ScoutEventResult = {
+  ponto: 'ponto',
+  erro: 'erro',
+  bloqueio_adversário: 'bloqueio adversário',
+  defesa_positiva: 'defesa positiva',
+} as const;
+
+export interface ScoutEvent {
+  id: string;
+  athleteId: string;
+  matchId: string;
+  skill: ScoutEventSkill;
+  zone: string;
+  result: ScoutEventResult;
+  createdAt: string;
+}
+
+export type ScoutEventInputSkill = typeof ScoutEventInputSkill[keyof typeof ScoutEventInputSkill];
+
+
+export const ScoutEventInputSkill = {
+  ataque: 'ataque',
+  saque: 'saque',
+  recepção: 'recepção',
+  bloqueio: 'bloqueio',
+  defesa: 'defesa',
+  levantamento: 'levantamento',
+} as const;
+
+export type ScoutEventInputResult = typeof ScoutEventInputResult[keyof typeof ScoutEventInputResult];
+
+
+export const ScoutEventInputResult = {
+  ponto: 'ponto',
+  erro: 'erro',
+  bloqueio_adversário: 'bloqueio adversário',
+  defesa_positiva: 'defesa positiva',
+} as const;
+
+export interface ScoutEventInput {
+  athleteId: string;
+  skill: ScoutEventInputSkill;
+  zone: string;
+  result: ScoutEventInputResult;
+}
+
 export type ReportType = typeof ReportType[keyof typeof ReportType];
 
 

@@ -16,6 +16,8 @@ tags:
     description: Athlete management
   - name: matches
     description: Match management and statistics
+  - name: scout
+    description: Match scouting events
   - name: training
     description: Training load management
   - name: analysis
@@ -216,6 +218,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Match"
+  /matches/{matchId}/scout-events:
+    get:
+      operationId: getScoutEvents
+      tags: [scout]
+      summary: List scouting events for a match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scouting events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScoutEvent"
+    post:
+      operationId: createScoutEvent
+      tags: [scout]
+      summary: Record a scouting event
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoutEventInput"
+      responses:
+        "201":
+          description: Created scouting event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoutEvent"
   /training-sessions:
     get:
       operationId: getTrainingSessions
@@ -605,6 +650,40 @@ components:
         second:
           $ref: "#/components/schemas/Athlete"
       required: [first, second]
+    ScoutEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        athleteId:
+          type: string
+        matchId:
+          type: string
+        skill:
+          type: string
+          enum: [ataque, saque, recepção, bloqueio, defesa, levantamento]
+        zone:
+          type: string
+        result:
+          type: string
+          enum: [ponto, erro, bloqueio adversário, defesa positiva]
+        createdAt:
+          type: string
+      required: [id, athleteId, matchId, skill, zone, result, createdAt]
+    ScoutEventInput:
+      type: object
+      properties:
+        athleteId:
+          type: string
+        skill:
+          type: string
+          enum: [ataque, saque, recepção, bloqueio, defesa, levantamento]
+        zone:
+          type: string
+        result:
+          type: string
+          enum: [ponto, erro, bloqueio adversário, defesa positiva]
+      required: [athleteId, skill, zone, result]
     Report:
       type: object
       properties:

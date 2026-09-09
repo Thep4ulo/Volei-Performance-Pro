@@ -341,6 +341,50 @@ export const UpdateMatchResponse = zod.object({
 
 
 /**
+ * @summary List scouting events for a match
+ */
+export const GetScoutEventsParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const GetScoutEventsResponseItem = zod.object({
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "matchId": zod.string(),
+  "skill": zod.enum(['ataque', 'saque', 'recepção', 'bloqueio', 'defesa', 'levantamento']),
+  "zone": zod.string(),
+  "result": zod.enum(['ponto', 'erro', 'bloqueio adversário', 'defesa positiva']),
+  "createdAt": zod.string()
+})
+export const GetScoutEventsResponse = zod.array(GetScoutEventsResponseItem)
+
+
+/**
+ * @summary Record a scouting event
+ */
+export const CreateScoutEventParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const CreateScoutEventBody = zod.object({
+  "athleteId": zod.string(),
+  "skill": zod.enum(['ataque', 'saque', 'recepção', 'bloqueio', 'defesa', 'levantamento']),
+  "zone": zod.string(),
+  "result": zod.enum(['ponto', 'erro', 'bloqueio adversário', 'defesa positiva'])
+})
+
+export const CreateScoutEventResponse = zod.object({
+  "id": zod.string(),
+  "athleteId": zod.string(),
+  "matchId": zod.string(),
+  "skill": zod.enum(['ataque', 'saque', 'recepção', 'bloqueio', 'defesa', 'levantamento']),
+  "zone": zod.string(),
+  "result": zod.enum(['ponto', 'erro', 'bloqueio adversário', 'defesa positiva']),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary List training sessions
  */
 export const GetTrainingSessionsResponseItem = zod.object({

@@ -1,0 +1,7 @@
+<svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48" height="48" rx="14" fill="#E0B84C"/>
+  <circle cx="24" cy="24" r="13" stroke="#102A43" stroke-width="2"/>
+  <path d="M15 15L33 33M33 15L15 33" stroke="#102A43" stroke-width="2"/>
+  <text x="58" y="22" fill="#102A43" font-family="Manrope, Arial, sans-serif" font-size="15" font-weight="800">Vôlei Pro</text>
+  <text x="58" y="36" fill="#627D98" font-family="DM Mono, monospace" font-size="7" letter-spacing="1.4">PERFORMANCE</text>
+</svg>

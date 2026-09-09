@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
@@ -98,8 +99,10 @@ export const reportsTable = pgTable("reports", {
 
 export const usersTable = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
+  externalId: text("external_id").notNull().unique(),
+  name: text("name").notNull().default("Usuário"),
   email: text("email").notNull().unique(),
-  role: text("role").notNull().default("Treinador"),
+  role: text("role").notNull().default("ANALYST"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -108,6 +111,30 @@ export const profilesTable = pgTable("profiles", {
   userId: uuid("user_id").references(() => usersTable.id).notNull(),
   displayName: text("display_name").notNull(),
   avatarUrl: text("avatar_url"),
+}, (table) => ({
+  userUnique: uniqueIndex("profiles_user_id_unique").on(table.userId),
+}));
+
+export const teamMembershipsTable = pgTable("team_memberships", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => usersTable.id).notNull(),
+  clubId: uuid("club_id").references(() => clubsTable.id).notNull(),
+  teamId: uuid("team_id").references(() => teamsTable.id).notNull(),
+  role: text("role").notNull().default("ANALYST"),
+  status: text("status").notNull().default("ACTIVE"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userTeamUnique: uniqueIndex("team_memberships_user_team_unique").on(table.userId, table.teamId),
+}));
+
+export const scoutEventsTable = pgTable("scout_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  athleteId: uuid("athlete_id").references(() => athletesTable.id).notNull(),
+  matchId: uuid("match_id").references(() => matchesTable.id).notNull(),
+  skill: text("skill").notNull(),
+  zone: text("zone").notNull(),
+  result: text("result").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const insertAthleteSchema = createInsertSchema(athletesTable).omit({

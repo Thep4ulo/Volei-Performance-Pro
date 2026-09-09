@@ -35,6 +35,8 @@ import type {
   MatchUpdate,
   Report,
   ReportInput,
+  ScoutEvent,
+  ScoutEventInput,
   TacticalSummary,
   TrainingSession,
   TrainingSessionInput
@@ -976,6 +978,155 @@ export const useUpdateMatch = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateMatchMutationOptions(options));
+    }
+
+export const getGetScoutEventsUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/scout-events`
+}
+
+/**
+ * @summary List scouting events for a match
+ */
+export const getScoutEvents = async (matchId: string, options?: Parameters<typeof customFetch>[1]): Promise<ScoutEvent[]> => {
+
+  return customFetch<ScoutEvent[]>(getGetScoutEventsUrl(matchId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScoutEventsQueryKey = (matchId: string,) => {
+    return [
+    `/api/matches/${matchId}/scout-events`
+    ] as const;
+    }
+
+
+export const getGetScoutEventsQueryOptions = <TData = Awaited<ReturnType<typeof getScoutEvents>>, TError = ErrorType<unknown>>(matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScoutEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScoutEventsQueryKey(matchId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getScoutEvents>>> = ({ signal }) => getScoutEvents(matchId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: matchId !== null && matchId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScoutEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScoutEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getScoutEvents>>>
+export type GetScoutEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List scouting events for a match
+ */
+
+export function useGetScoutEvents<TData = Awaited<ReturnType<typeof getScoutEvents>>, TError = ErrorType<unknown>>(
+ matchId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScoutEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScoutEventsQueryOptions(matchId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateScoutEventUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}/scout-events`
+}
+
+/**
+ * @summary Record a scouting event
+ */
+export const createScoutEvent = async (matchId: string,
+    scoutEventInput: ScoutEventInput, options?: Parameters<typeof customFetch>[1]): Promise<ScoutEvent> => {
+
+  return customFetch<ScoutEvent>(getCreateScoutEventUrl(matchId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scoutEventInput)
+  }
+);}
+
+
+
+
+
+export const getCreateScoutEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScoutEvent>>, TError,{matchId: string;data: BodyType<ScoutEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createScoutEvent>>, TError,{matchId: string;data: BodyType<ScoutEventInput>}, TContext> => {
+
+const mutationKey = ['createScoutEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createScoutEvent>>, {matchId: string;data: BodyType<ScoutEventInput>}> = (props) => {
+          const {matchId,data} = props ?? {};
+
+          return  createScoutEvent(matchId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateScoutEventMutationResult = NonNullable<Awaited<ReturnType<typeof createScoutEvent>>>
+    export type CreateScoutEventMutationBody = BodyType<ScoutEventInput>
+    export type CreateScoutEventMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record a scouting event
+ */
+export const useCreateScoutEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScoutEvent>>, TError,{matchId: string;data: BodyType<ScoutEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createScoutEvent>>,
+        TError,
+        {matchId: string;data: BodyType<ScoutEventInput>},
+        TContext
+      > => {
+      return useMutation(getCreateScoutEventMutationOptions(options));
     }
 
 export const getGetTrainingSessionsUrl = () => {
